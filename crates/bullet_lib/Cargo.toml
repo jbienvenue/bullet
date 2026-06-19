@@ -57,4 +57,4 @@ path = "../../examples/progression/4_multi_layer.rs"
 
 [[example]]
 name = "prune"
-path = "../examples/prune.rs"
+path = "../../examples/prune.rs"
