@@ -97,12 +97,7 @@ fn main() {
             start_superbatch: 1,
             end_superbatch: superbatches,
         },
-        wdl_scheduler: wdl::Sequence{
-            first: wdl::LinearWDL{start: 0.3, end: 0.5},
-            second: wdl::ConstantWDL{value: 0.5},
-            first_scheduler_final_superbatch: superbatches/2
-        },
-
+        wdl_scheduler: wdl::LinearWDL{start: 0.3, end: 0.7},
         lr_scheduler: lr::CosineDecayLR { initial_lr, final_lr, final_superbatch: superbatches },
         save_rate: 10,
     };
