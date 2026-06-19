@@ -1,14 +1,8 @@
 //use acyclib::{graph::builder::Affine, trainer::logger};
 //use bullet_cuda_backend::CudaMarker;
 use bullet_lib::{
-    game::{
-        inputs::{ChessBucketsMirrored, SparseInputType},
-        outputs,
-    },
-    nn::{InitSettings, Shape,
-        optimiser::{AdamW, AdamWParams},
-        optimiser
-    },
+    game::inputs::SparseInputType,
+    nn::optimiser::{AdamW, AdamWParams},
     trainer::{
         save::SavedFormat,
         schedule::{TrainingSchedule, TrainingSteps, lr, wdl},
@@ -17,18 +11,16 @@ use bullet_lib::{
     value::{ValueTrainerBuilder},
 };
 use bullet_lib::value::loader::ViriBinpackLoader;
-use bullet_lib::game::inputs::get_num_buckets;
 use bullet_lib::game::outputs::MaterialCount;
 
 use crate::threat_inputs::ThreatInputs;
-use std::env;
 use viriformat::dataformat::Filter;
 
 const L1_SIZE: usize = 512;
 const L2_SIZE: usize = 16;
 const L3_SIZE: usize = 32;
 
-const INPUT_BUCKETS: usize = 4;
+//const INPUT_BUCKETS: usize = 4;
 const OUTPUT_BUCKETS: usize = 8;
 
 #[rustfmt::skip]
@@ -50,16 +42,13 @@ fn main() {
     let initial_lr = 0.001;
     let final_lr = 0.001 * 0.3f32.powi(5);
     let superbatches: usize = 600;
-    const NUM_OUTPUT_BUCKETS: usize = 8;
-
-    const NUM_INPUT_BUCKETS: usize = get_num_buckets(&KING_BUCKET_LAYOUT);
 
     let inputs = ThreatInputs::new(KING_BUCKET_LAYOUT);
     let mut trainer = ValueTrainerBuilder::default()
         .dual_perspective()
         .optimiser(AdamW)
         .inputs(inputs)
-        .output_buckets(MaterialCount::<NUM_OUTPUT_BUCKETS>)
+        .output_buckets(MaterialCount::<OUTPUT_BUCKETS>)
         .save_format(&[
             // merge in the factoriser weights
             SavedFormat::id("l0w"),
@@ -74,13 +63,13 @@ fn main() {
         .loss_fn(|output, target| output.sigmoid().squared_error(target))
         .build(|builder, stm_inputs, ntm_inputs, output_buckets| {
             
-            let mut l0 = builder.new_affine("l0", inputs.num_inputs(), L1_SIZE);
+            let l0 = builder.new_affine("l0", inputs.num_inputs(), L1_SIZE);
             l0.init_with_effective_input_size(20000);
 
             // output layer weights
-            let l1 = builder.new_affine("l1", L1_SIZE, NUM_OUTPUT_BUCKETS*L2_SIZE);
-            let l2 = builder.new_affine("l2", L2_SIZE, NUM_OUTPUT_BUCKETS*L3_SIZE);
-            let l3 = builder.new_affine("l3", L3_SIZE, NUM_OUTPUT_BUCKETS);
+            let l1 = builder.new_affine("l1", L1_SIZE, OUTPUT_BUCKETS*L2_SIZE);
+            let l2 = builder.new_affine("l2", L2_SIZE, OUTPUT_BUCKETS*L3_SIZE);
+            let l3 = builder.new_affine("l3", L3_SIZE, OUTPUT_BUCKETS);
 
             // inference
             //let ft = |input, start, end| l0.slice(start, end).forward(input).crelu();
@@ -111,7 +100,9 @@ fn main() {
         wdl_scheduler: wdl::Sequence{
             first: wdl::LinearWDL{start: 0.3, end: 0.5},
             second: wdl::ConstantWDL{value: 0.5},
-        }
+            first_scheduler_final_superbatch: superbatches/2
+        },
+
         lr_scheduler: lr::CosineDecayLR { initial_lr, final_lr, final_superbatch: superbatches },
         save_rate: 10,
     };
@@ -472,7 +463,7 @@ mod attacks {
     }
 
     const A: u64 = 0x0101_0101_0101_0101;
-    const H: u64 = A << 7;
+//    const H: u64 = A << 7;
 
     const DIAGS: [u64; 15] = [
         0x0100_0000_0000_0000,
