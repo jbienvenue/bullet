@@ -89,7 +89,7 @@ fn main() {
     let settings = LocalSettings { threads: 10, test_set: None, output_directory: "checkpoints", batch_queue_size: 32 };
 
     let schedule = TrainingSchedule {
-        net_id: "ti_4ib_512_16_32_dfrc_linWDLall".to_string(),
+        net_id: "pulsar".to_string(),
         eval_scale: 400.0,
         steps: TrainingSteps {
             batch_size: 16_384*8,
@@ -97,12 +97,16 @@ fn main() {
             start_superbatch: 1,
             end_superbatch: superbatches,
         },
-        wdl_scheduler: wdl::LinearWDL{start: 0.3, end: 0.7},
+        wdl_scheduler: wdl::Sequence{
+            first:  wdl::LinearWDL{start: 0.3, end: 0.7},
+            second: wdl::ConstantWDL{value:1.0},
+            first_scheduler_final_superbatch:500
+        },
         lr_scheduler: lr::CosineDecayLR { initial_lr, final_lr, final_superbatch: superbatches },
         save_rate: 10,
     };
     let data_loader = {
-        let file_path = "data/data9-10-12-13-14-17-interleaved.vf";
+        let file_path = "data/data9-10-12-13-14-17-interleaved-2.vf";
         let buffer_size_mb = 4096;
         let threads = 20;
         let filter = Filter {
