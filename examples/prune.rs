@@ -16,7 +16,7 @@ use bullet_lib::game::outputs::MaterialCount;
 use crate::threat_inputs::ThreatInputs;
 use viriformat::dataformat::Filter;
 
-const L1_SIZE: usize = 512;
+const L1_SIZE: usize = 640;
 const L2_SIZE: usize = 16;
 const L3_SIZE: usize = 32;
 
@@ -89,7 +89,7 @@ fn main() {
     let settings = LocalSettings { threads: 10, test_set: None, output_directory: "checkpoints", batch_queue_size: 32 };
 
     let schedule = TrainingSchedule {
-        net_id: "pulsar".to_string(),
+        net_id: "phalaina".to_string(),
         eval_scale: 400.0,
         steps: TrainingSteps {
             batch_size: 16_384*8,
