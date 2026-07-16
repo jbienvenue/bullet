@@ -20,19 +20,19 @@ const L1_SIZE: usize = 640;
 const L2_SIZE: usize = 16;
 const L3_SIZE: usize = 32;
 
-//const INPUT_BUCKETS: usize = 4;
+//const INPUT_BUCKETS: usize = 16;
 const OUTPUT_BUCKETS: usize = 8;
 
 #[rustfmt::skip]
 const KING_BUCKET_LAYOUT: [usize; 32] = [
-    0, 0, 1, 1,
-    2, 2, 2, 2,
-    3, 3, 3, 3,
-    3, 3, 3, 3,
-    3, 3, 3, 3,
-    3, 3, 3, 3,
-    3, 3, 3, 3,
-    3, 3, 3, 3,
+    0, 1, 2, 3,
+    4, 5, 6, 7,
+    8, 8, 9, 9,
+    10, 10, 11, 11,
+    12, 12, 13, 13,
+    12, 12, 13, 13,
+    14, 14, 15, 15,
+    14, 14, 15, 15,
 ];
 
 fn main() {
@@ -89,7 +89,7 @@ fn main() {
     let settings = LocalSettings { threads: 10, test_set: None, output_directory: "checkpoints", batch_queue_size: 32 };
 
     let schedule = TrainingSchedule {
-        net_id: "phalaina".to_string(),
+        net_id: "sauropoda".to_string(),
         eval_scale: 400.0,
         steps: TrainingSteps {
             batch_size: 16_384*8,
