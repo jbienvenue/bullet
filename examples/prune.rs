@@ -2,7 +2,10 @@
 //use bullet_cuda_backend::CudaMarker;
 use bullet_lib::{
     game::inputs::SparseInputType,
-    nn::optimiser::{AdamW, AdamWParams},
+    nn::{
+        Shape,
+        optimiser::{AdamW, AdamWParams}
+    },
     trainer::{
         save::SavedFormat,
         schedule::{TrainingSchedule, TrainingSteps, lr, wdl},
@@ -60,8 +63,8 @@ fn main() {
             SavedFormat::id("l3w"),
             SavedFormat::id("l3b"),
         ])
-        .loss_fn(|output, target| output.sigmoid().squared_error(target))
-        .build(|builder, stm_inputs, ntm_inputs, output_buckets| {
+//        .loss_fn(|output, target| output.sigmoid().squared_error(target))
+        .build_custom(|builder, (stm_inputs, ntm_inputs, output_buckets), target| {
             
             let l0 = builder.new_affine("l0", inputs.num_inputs(), L1_SIZE);
             l0.init_with_effective_input_size(20000);
@@ -72,15 +75,21 @@ fn main() {
             let l3 = builder.new_affine("l3", L3_SIZE, OUTPUT_BUCKETS);
 
             // inference
-            //let ft = |input, start, end| l0.slice(start, end).forward(input).crelu();
-            //let stm_hidden = ft(stm_inputs, 0, L1_SIZE / 2) * ft(stm_inputs, L1_SIZE / 2, L1_SIZE);
-            //let ntm_hidden = ft(ntm_inputs, 0, L1_SIZE / 2) * ft(ntm_inputs, L1_SIZE / 2, L1_SIZE);
-            let stm_hidden = l0.forward(stm_inputs).crelu().pairwise_mul();
-            let ntm_hidden = l0.forward(ntm_inputs).crelu().pairwise_mul();
+            let ft = |input, start, end| l0.slice(start, end).forward(input).crelu();
+            let stm_hidden = ft(stm_inputs, 0, L1_SIZE / 2) * ft(stm_inputs, L1_SIZE / 2, L1_SIZE);
+            let ntm_hidden = ft(ntm_inputs, 0, L1_SIZE / 2) * ft(ntm_inputs, L1_SIZE / 2, L1_SIZE);
+            //let stm_hidden = l0.forward(stm_inputs).crelu().pairwise_mul();
+            //let ntm_hidden = l0.forward(ntm_inputs).crelu().pairwise_mul();
             let hl1 = stm_hidden.concat(ntm_hidden);
+
+            let ones_l1_vec = builder.new_constant(Shape::new(1, L1_SIZE), &[1.0 / L1_SIZE as f32; L1_SIZE]);
+            let l0_out_norm = ones_l1_vec.matmul(hl1);
             let hl2 = l1.forward(hl1).select(output_buckets).screlu();
             let hl3 = l2.forward(hl2).select(output_buckets).crelu();
-            l3.forward(hl3).select(output_buckets)
+            let out = l3.forward(hl3).select(output_buckets);
+            let loss = out.sigmoid().squared_error(target);
+            let loss = loss + 0.005*l0_out_norm;
+            (out, loss)
         });
 
     // need to account for factoriser weight magnitudes
@@ -89,7 +98,7 @@ fn main() {
     let settings = LocalSettings { threads: 10, test_set: None, output_directory: "checkpoints", batch_queue_size: 32 };
 
     let schedule = TrainingSchedule {
-        net_id: "sauropoda".to_string(),
+        net_id: "wapusk2".to_string(),
         eval_scale: 400.0,
         steps: TrainingSteps {
             batch_size: 16_384*8,
@@ -106,7 +115,7 @@ fn main() {
         save_rate: 10,
     };
     let data_loader = {
-        let file_path = "data/data9-10-12-13-14-17-interleaved-2.vf";
+        let file_path = "data/data9-10-12-13-14-17-18-interleaved.vf";
         let buffer_size_mb = 4096;
         let threads = 20;
         let filter = Filter {
