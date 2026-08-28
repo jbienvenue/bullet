@@ -26,7 +26,7 @@ use bullet_lib::game::outputs::MaterialCount;
 use viriformat::dataformat::Filter;
 mod inputs;
 
-const DATA_PATH: &str = "data/data9-10-12-13-14-17-interleaved-2.vf";
+const DATA_PATH: &str = "data/data9-10-12-13-14-17-18-interleaved.vf";
 const NET_NAME: &str = "pp3";
 
 const MAP_THREADS: u8 = 8;
@@ -167,8 +167,8 @@ fn main() {
             &mut optimiser,
             TrainingSchedule {
                 steps: TrainingSteps {
-                    batch_size: 16_384,
-                    batches_per_superbatch: 6104,
+                    batch_size: 16_384 * 8,
+                    batches_per_superbatch: 6104 / 8,
                     start_superbatch: 1,
                     end_superbatch,
                 },
