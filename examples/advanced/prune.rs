@@ -1,14 +1,25 @@
 //use acyclib::{graph::builder::Affine, trainer::logger};
 //use bullet_cuda_backend::CudaMarker;
 use bullet_lib::{
-    game::inputs::SparseInputType,
-    nn::optimiser::{AdamW, AdamWParams},
+    game::inputs::{ChessBucketsMirrored, SparseInputType, get_num_buckets},
     trainer::{
-        save::SavedFormat,
-        schedule::{TrainingSchedule, TrainingSteps, lr, wdl},
-        settings::LocalSettings,
+        schedule::{
+            lr::{self, LrScheduler},
+            wdl
+        },
     },
-    value::{ValueTrainerBuilder},
+    value::{
+        save::save_to_checkpoint,
+    },
+};
+use bullet_trainer::{
+    model::{InitSettings, ModelDefinition, ModelEvaluator, ModelInputs, ModelWeights, SavedFormat},
+    optimiser::{
+        Optimiser,
+        adam::{AdamW, AdamWParams},
+    },
+    reader::ReadMapLoader,
+    run::{DefaultDevice, TrainingSchedule, TrainingSteps, train},
 };
 use bullet_lib::value::loader::ViriBinpackLoader;
 use bullet_lib::game::outputs::MaterialCount;
@@ -89,7 +100,8 @@ fn main() {
             let ntm_hidden = ft(ntm_pp, ntm_psqt, 0, L1 / 2) * ft(ntm_pp, ntm_psqt, L1 / 2, L1);
             let l0_out = stm_hidden.concat(ntm_hidden);
 
-            let ones_l1_vec = builder.new_constant((1, L1), &[1.0 / L1 as f32; L1]);
+            //let ones_l1_vec = builder.new_constant((1, L1), &[1.0 / L1 as f32; L1]);
+            //let l0_out_norm = ones_l1_vec.matmul(l0_out);
 
             let l1_out = l1.forward(l0_out).select(output_buckets);
             let hl2 = l1_out.screlu();
@@ -100,6 +112,8 @@ fn main() {
             let l3_out = l3.forward(hl3).select(output_buckets);
 
             let loss = l3_out.sigmoid().squared_error(target);
+
+            //let loss = loss + 0.005 * l0_out_norm;
 
             (Some(loss.reduce_sum_batch()), vec![("output".to_string(), l3_out)])
         },
@@ -184,11 +198,11 @@ fn main() {
     run(
         1,
         SUPERBATCHES_STAGE1,
-        lr::LinearDecayLR { initial_lr: 1e-3, final_lr: 1e-6, final_superbatch: SUPERBATCHES_STAGE1 }.boxed(),
+        lr::LinearDecayLR { initial_lr: 1e-5, final_lr: 1e-7, final_superbatch: SUPERBATCHES_STAGE1 }.boxed(),
         inputs::make_inputs_mapper(params, wdl::ConstantWDL { value:1.0 }),
     );
 
-    let schedule = TrainingSchedule {
+    /*let schedule = TrainingSchedule {
         net_id: "sauropoda".to_string(),
         eval_scale: 400.0,
         steps: TrainingSteps {
@@ -204,7 +218,7 @@ fn main() {
         },
         lr_scheduler: lr::CosineDecayLR { initial_lr, final_lr, final_superbatch: superbatches },
         save_rate: 10,
-    };
+    };*/
 
     evaluator.load_device_weights(optimiser.weights()).unwrap();
     let evaluator_mapper = inputs::make_inputs_mapper(params, wdl::ConstantWDL { value: 0.0 });
