@@ -63,4 +63,4 @@ path = "../../examples/advanced/main.rs"
 
 [[example]]
 name = "prune"
-path = "../../examples/prune.rs"
+path = "../../examples/advanced/prune.rs"
