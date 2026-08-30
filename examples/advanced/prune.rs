@@ -137,25 +137,16 @@ fn main() {
     optimiser.set_params_for_weight("l1/w", l1_clip);
 
     let saved_format = vec![
-        SavedFormat::id("l0/psqt")
-            .transform(|weights, values| {
-                let fac = weights.get("l0/fac").values.f32().repeat(INPUT_BUCKETS);
-                assert_eq!(values.len(), fac.len());
-                values.iter().zip(fac).map(|(&a, b)| a + b).collect()
-            })
-            .round()
-            .quantise::<i16>(Q0),
-        SavedFormat::id("l0/pp/w").round().quantise::<i8>(Q0),
-        SavedFormat::id("l0/pp/b").round().quantise::<i16>(Q0),
-        SavedFormat::id("l1/w")
-            .transform(|_, values| values.iter().map(|f| f / (FT_SHIFT_SCALE * FT_SHIFT_SCALE)).collect())
-            .round()
-            .quantise::<i8>(Q1),
-        SavedFormat::id("l1/b").round().quantise::<i32>(i32::from(Q) * 256),
-        SavedFormat::id("l2/w").round().quantise::<i32>(i32::from(Q)),
-        SavedFormat::id("l2/b").round().quantise::<i32>(i32::from(Q).pow(3)),
-        SavedFormat::id("l3/w").round().quantise::<i32>(i32::from(Q)),
-        SavedFormat::id("l3/b").round().quantise::<i32>(i32::from(Q).pow(4)),
+        SavedFormat::id("l0/fac"),
+        SavedFormat::id("l0/psqt"),
+        SavedFormat::id("l0/pp/w"),
+        SavedFormat::id("l0/pp/b"),
+        SavedFormat::id("l1/w"),
+        SavedFormat::id("l1/b"),
+        SavedFormat::id("l2/w"),
+        SavedFormat::id("l2/b"),
+        SavedFormat::id("l3/w"),
+        SavedFormat::id("l3/b"),
     ];
 
     let reader = ViriBinpackLoader::new(DATA_PATH, 8192, 16, Filter{min_ply: 8, ..Default::default()});
