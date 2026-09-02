@@ -91,7 +91,7 @@ fn main() {
 
             let l1 = builder.new_affine("l1/", L1, OUTPUT_BUCKETS * L2);
             let l2 = builder.new_affine("l2/", L2 * 2, OUTPUT_BUCKETS * L3);
-            let l3 = builder.new_affine("l3/", L3, OUTPUT_BUCKETS);
+            let l3 = builder.new_affine("l3/", L3, OUTPUT_BUCKETS*2);
 
             let ft = |pp, psqt, start, end| {
                 (l0_pp.slice(start, end).forward(pp) + l0_psqt.slice_rows(start, end).matmul(psqt)).crelu()
@@ -110,9 +110,10 @@ fn main() {
             let hl3 = l2_out.crelu();
 
             let l3_out = l3.forward(hl3).select(output_buckets);
+            let l3_sigm = l3_out.sigmoid()
+            let loss = l3_out.slice_rows(0, 1).squared_error(target);
 
-            let loss = l3_out.sigmoid().squared_error(target);
-
+            loss += l3_out.slice_rows(1, 2).squared_error(loss)
             //let loss = loss + 0.005 * l0_out_norm;
 
             (Some(loss.reduce_sum_batch()), vec![("output".to_string(), l3_out)])
