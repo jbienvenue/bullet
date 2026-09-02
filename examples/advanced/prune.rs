@@ -90,7 +90,7 @@ fn main() {
             l0_psqt = l0_psqt + l0f.repeat(psqt.num_inputs() / 768);
 
             let l1 = builder.new_affine("l1/", L1, OUTPUT_BUCKETS * L2);
-            let l2 = builder.new_affine("l2/", L2, OUTPUT_BUCKETS * L3);
+            let l2 = builder.new_affine("l2/", L2 * 2, OUTPUT_BUCKETS * L3);
             let l3 = builder.new_affine("l3/", L3, OUTPUT_BUCKETS);
 
             let ft = |pp, psqt, start, end| {
@@ -104,7 +104,7 @@ fn main() {
             //let l0_out_norm = ones_l1_vec.matmul(l0_out);
 
             let l1_out = l1.forward(l0_out).select(output_buckets);
-            let hl2 = l1_out.screlu();
+            let hl2 = l1_out.concat(l1_out.abs_pow(2.0)).crelu();
 
             let l2_out = l2.forward(hl2).select(output_buckets);
             let hl3 = l2_out.crelu();
