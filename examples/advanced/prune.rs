@@ -113,7 +113,7 @@ fn main() {
             let l3_sigm = l3_out.sigmoid();
             let loss = l3_sigm.slice_rows(0, 1).squared_error(target);
 
-            let loss = loss + l3_sigm.slice_rows(1, 2).squared_error(loss.detach());
+            let loss = loss + 0.005 * l3_sigm.slice_rows(1, 2).squared_error(loss.detach());
             //let loss = loss + 0.005 * l0_out_norm;
 
             (Some(loss.reduce_sum_batch()), vec![("output".to_string(), l3_out)])
