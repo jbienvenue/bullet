@@ -27,7 +27,7 @@ use viriformat::dataformat::Filter;
 mod inputs;
 
 const DATA_PATH: &str = "data/data9-10-12-13-14-17-18-interleaved.vf";
-const NET_NAME: &str = "pp3-uncertaintyhead";
+const NET_NAME: &str = "pp3-uncertaintyhead2";
 
 const MAP_THREADS: u8 = 8;
 const SAVE_RATE: usize = 50;
@@ -113,7 +113,7 @@ fn main() {
             let l3_sigm = l3_out.sigmoid();
             let loss = l3_sigm.slice_rows(0, 1).squared_error(target);
 
-            let loss = loss + l3_sigm.slice_rows(1, 2).squared_error(loss);
+            let loss = loss + l3_sigm.slice_rows(1, 2).squared_error(loss.detach());
             //let loss = loss + 0.005 * l0_out_norm;
 
             (Some(loss.reduce_sum_batch()), vec![("output".to_string(), l3_out)])
