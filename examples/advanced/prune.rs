@@ -91,7 +91,8 @@ fn main() {
 
             let l1 = builder.new_affine("l1/", L1, OUTPUT_BUCKETS * L2);
             let l2 = builder.new_affine("l2/", L2 * 2, OUTPUT_BUCKETS * L3);
-            let l3 = builder.new_affine("l3/", L3, OUTPUT_BUCKETS*2);
+            let l3 = builder.new_affine("l3/", L3, OUTPUT_BUCKETS);
+            let l3_uncertainty = builder.new_affine("l3_uncertainty/", L3, OUTPUT_BUCKETS);
 
             let ft = |pp, psqt, start, end| {
                 (l0_pp.slice(start, end).forward(pp) + l0_psqt.slice_rows(start, end).matmul(psqt)).crelu()
@@ -109,14 +110,15 @@ fn main() {
             let l2_out = l2.forward(hl2).select(output_buckets);
             let hl3 = l2_out.crelu();
 
-            let l3_out = l3.forward(hl3).select(output_buckets);
-            let l3_sigm = l3_out.sigmoid();
-            let loss = l3_sigm.slice_rows(0, 1).squared_error(target);
+            let output = l3.forward(hl3).select(output_buckets);
+            let uncertainty = l3_uncertainty.forward(hl3.detach()).select(output_buckets);
+            let mse_loss = output.sigmoid().squared_error(target);
+            let loss = mse_loss + uncertainty.sigmoid().squared_error(mse_loss.detach());
 
-            let loss = loss + l3_sigm.slice_rows(1, 2).squared_error(loss.detach());
+            //let loss = loss + l3_uncertainty_sigm.squared_error(loss.detach());
             //let loss = loss + 0.005 * l0_out_norm;
 
-            (Some(loss.reduce_sum_batch()), vec![("output".to_string(), l3_out)])
+            (Some(loss.reduce_sum_batch()), vec![("output".to_string(), output)])
         },
     );
 
@@ -148,6 +150,8 @@ fn main() {
         SavedFormat::id("l2/b"),
         SavedFormat::id("l3/w"),
         SavedFormat::id("l3/b"),
+        SavedFormat::id("l3_uncertainty/w"),
+        SavedFormat::id("l3_uncertainty/b"),
     ];
 
     let reader = ViriBinpackLoader::new(DATA_PATH, 8192, 16, Filter{min_ply: 8, ..Default::default()});
