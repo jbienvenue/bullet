@@ -21,12 +21,13 @@ use bullet_trainer::{
     reader::ReadMapLoader,
     run::{DefaultDevice, TrainingSchedule, TrainingSteps, train},
 };
-use bullet_lib::value::loader::ViriBinpackLoader;
+
+mod hoynosreader;
 use bullet_lib::game::outputs::MaterialCount;
 use viriformat::dataformat::Filter;
 mod inputs;
 
-const DATA_PATH: &str = "data/data9-10-12-13-14-17-18-interleaved.vf";
+const DATA_PATH: [&str; 1] = ["data/data9-10-12-13-14-17-18-interleaved.vf"];
 const NET_NAME: &str = "pp3";
 
 const MAP_THREADS: u8 = 8;
@@ -149,7 +150,10 @@ fn main() {
         SavedFormat::id("l3/b"),
     ];
 
-    let reader = ViriBinpackLoader::new(DATA_PATH, 8192, 16, Filter{min_ply: 8, ..Default::default()});
+    let reader = hoynosreader::HoynosReader::new(
+        DATA_PATH.to_vec().into_iter().map(|v| v.to_string()).collect(),
+        8192, 16,
+        Filter{min_ply: 8, ..Default::default()});
 
     let params = (&inputs, &pp, psqt, output_buckets);
 
