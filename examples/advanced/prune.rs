@@ -24,7 +24,6 @@ use bullet_trainer::{
 
 mod hoynosreader;
 use bullet_lib::game::outputs::MaterialCount;
-use viriformat::dataformat::Filter;
 mod inputs;
 
 const DATA_PATH: [&str; 1] = ["data/data9-10-12-13-14-17-18-interleaved.vf"];
@@ -152,8 +151,8 @@ fn main() {
 
     let reader = hoynosreader::HoynosReader::new(
         DATA_PATH.to_vec().into_iter().map(|v| v.to_string()).collect(),
-        8192, 16,
-        Filter{min_ply: 8, ..Default::default()});
+        8192, 16
+    );
 
     let params = (&inputs, &pp, psqt, output_buckets);
 
