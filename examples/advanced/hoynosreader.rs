@@ -144,7 +144,7 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>) {
     let bm: u16 = u16::from_le_bytes(bytes[24..26].try_into().expect("wrong sized array"));
     let score: i16 = i16::from_le_bytes(bytes[26..28].try_into().expect("wrong sized array"));
 
-    let depth: i32 = (infos%32) as i32;
+    let depth: u32 = (infos%32) as u32;
     infos /= 32;
 
     let bound: u8 = (infos%3) as u8;
