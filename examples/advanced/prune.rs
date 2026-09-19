@@ -112,10 +112,10 @@ fn main() {
             let l3_out = l3.forward(hl3).select(output_buckets);
 
             let l3_sigm = l3_out.sigmoid();
-            let score_target = target.slice_rows(0, 1)
+            let score_target = target.slice_rows(0, 1);
             let loss_exact = l3_sigm.squared_error(score_target);
-            let loss_upper = (l3_sigm - target).max(0.0).pow(2.0);
-            let loss_lower = (target - l3_sigm).max(0.0).pow(2.0);
+            let loss_upper = (l3_sigm - score_target).max(0.0).abs_pow(2.0);
+            let loss_lower = (score_target - l3_sigm).max(0.0).abs_pow(2.0);
             let loss = loss_exact*target.slice_rows(1, 2) + loss_lower*target.slice_rows(2, 3) + loss_upper*target.slice_rows(3, 4);
             //let loss = loss + 0.005 * l0_out_norm;
 

@@ -59,12 +59,11 @@ pub fn make_inputs_mapper(
 
             bucket[0] = i32::from(params.3.bucket(pos));
 
-            let result = f32::from(pos.result) / 2.0;
             let score = 1.0 / (1.0 + (f32::from(-pos.score) / 400.0).exp());
             let lambda = wdl.blend(step.batch(), step.superbatch(), step.final_superbatch());
             assert!((0.0..=1.0).contains(&lambda), "WDL lambda must be in [0, 1]");
             target[0] = score;
-            target[pos.result] = 1.0;
+            target[pos.result as usize] = 1.0;
         },
     )
 }
