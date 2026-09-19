@@ -150,47 +150,59 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>) {
     let bound: u8 = (infos%3) as u8;
     infos /= 3;
 
-    let count50: i32 = (infos%100) as i32;
+    let _count50: i32 = (infos%100) as i32;
     infos /= 100;
 
-    let stm: usize = (infos%2) as usize;
+    let stm: bool = (infos%2) != 0;
     infos /= 2;
 
     let mut kingpos2: u8 = (infos % 31) as u8;
     infos /= 31;
 
-    let kingpos1: u8 = (infos % 32) as u8;
+    let mut kingpos1: u8 = (infos % 32) as u8;
     kingpos2 += (kingpos1 <= kingpos2) as u8;
     infos /= 32;
 
     let mut bbs: [u64; 8] = [0; 8];
     let mut mask: u64 = occupancy;
     let mut idx: usize = 0;
+    let mut kingpos: u8 = 0;
+    let nb_pieces = occupancy.count_ones() as u8;
+    kingpos1 = nb_pieces - kingpos1 - 1;
+    kingpos2 = nb_pieces - kingpos2 - 1;
+    assert!(nb_pieces <= 32);
     while mask > 0 {
-        let sq = mask.trailing_zeros();
+        let sq = 63^mask.leading_zeros();
         let sqmask: u64 = 1 << sq as u64;
         let mut piece: u8;
         if idx == kingpos1 as usize {
+            if stm {
+                kingpos = sq as u8;
+            }
             piece = 5*2;
         }else if idx == kingpos2 as usize {
+            if !stm {
+                kingpos = sq as u8;
+            }
             piece = 5*2+1;
         }else {
-            piece = (infos % 13) as u8;
-            if piece == 11 {
+            piece = (infos % 11) as u8;
+            if piece == 10 {
                 if sq / 8 == 0 || sq / 8 == 7 {
                     piece = 3; // rook
                 }else {
+                    assert!(sq/8 == 3 || sq/8 == 4);
                     piece = 0; // pawn
                 }
                 piece = piece * 2 + (sq / 8 >= 4) as u8;
             }
-            infos /= 13;
+            infos /= 11;
         }
         bbs[(piece%2) as usize] |= sqmask;
         bbs[(piece >> 1) as usize + 2] |= sqmask;
 
         idx += 1;
-        mask &= mask-1;
+        mask ^= 1 << sq;
     }
     let mut board: ChessBoard = ChessBoard::from_raw(
         bbs,
