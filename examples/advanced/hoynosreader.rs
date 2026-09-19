@@ -141,10 +141,10 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>) {
     assert_eq!(bytes.len(), 28);
     let occupancy: u64 = u64::from_le_bytes(bytes[..8].try_into().expect("wrong sized array"));
     let mut infos: u128 = u128::from_le_bytes(bytes[8..24].try_into().expect("wrong sized array"));
-    let bm: u16 = u16::from_le_bytes(bytes[24..26].try_into().expect("wrong sized array"));
+    let _bm: u16 = u16::from_le_bytes(bytes[24..26].try_into().expect("wrong sized array"));
     let score: i16 = i16::from_le_bytes(bytes[26..28].try_into().expect("wrong sized array"));
 
-    let depth: u32 = (infos%32) as u32;
+    let _depth: u32 = (infos%32) as u32;
     infos /= 32;
 
     let bound: u8 = (infos%3) as u8;
@@ -166,7 +166,6 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>) {
     let mut bbs: [u64; 8] = [0; 8];
     let mut mask: u64 = occupancy;
     let mut idx: usize = 0;
-    let mut kingpos: u8 = 0;
     let nb_pieces = occupancy.count_ones() as u8;
     kingpos1 = nb_pieces - kingpos1 - 1;
     kingpos2 = nb_pieces - kingpos2 - 1;
@@ -176,14 +175,8 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>) {
         let sqmask: u64 = 1 << sq as u64;
         let mut piece: u8;
         if idx == kingpos1 as usize {
-            if stm {
-                kingpos = sq as u8;
-            }
             piece = 5*2;
         }else if idx == kingpos2 as usize {
-            if !stm {
-                kingpos = sq as u8;
-            }
             piece = 5*2+1;
         }else {
             piece = (infos % 11) as u8;
@@ -206,7 +199,7 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>) {
     }
     let mut board: ChessBoard = ChessBoard::from_raw(
         bbs,
-        stm,
+        stm as usize,
         score,
         bound as f32 / 2.0,
     ).unwrap();
