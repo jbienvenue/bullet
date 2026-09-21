@@ -1,5 +1,6 @@
 //use acyclib::{graph::builder::Affine, trainer::logger};
 //use bullet_cuda_backend::CudaMarker;
+#[macro_use] extern crate cfor;
 use bullet_lib::{
     game::inputs::{ChessBucketsMirrored, SparseInputType, get_num_buckets},
     trainer::{
@@ -153,9 +154,11 @@ fn main() {
         SavedFormat::id("l3/b"),
     ];
 
+    let filter: hoynosreader::Filter = hoynosreader::Filter::default();
     let reader = hoynosreader::HoynosReader::new(
         DATA_PATH.to_vec().into_iter().map(|v| v.to_string()).collect(),
-        8192, 16
+        8192, 16,
+        &filter
     );
 
     let params = (&inputs, &pp, psqt, output_buckets);

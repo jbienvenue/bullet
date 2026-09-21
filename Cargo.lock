@@ -106,6 +106,7 @@ dependencies = [
  "bullet-gpu",
  "bullet-trainer",
  "bulletformat",
+ "cfor",
  "montyformat",
  "oorandom",
  "rand 0.9.4",
@@ -130,6 +131,12 @@ name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
+
+[[package]]
+name = "cfor"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e035019ccf76253261e8ba408182d2d4de6acc4dac78c41b2e5d645df2301205"
 
 [[package]]
 name = "clap"
