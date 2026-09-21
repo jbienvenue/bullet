@@ -243,11 +243,15 @@ impl DataReader<ChessBoard> for HoynosReader {
 }
 
 fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
-    assert_eq!(bytes.len(), 28);
     let occupancy: u64 = u64::from_le_bytes(bytes[..8].try_into().expect("wrong sized array"));
-    let mut infos: u128 = u128::from_le_bytes(bytes[8..24].try_into().expect("wrong sized array"));
-    let bm: u16 = u16::from_le_bytes(bytes[24..26].try_into().expect("wrong sized array"));
-    let score: i16 = i16::from_le_bytes(bytes[26..28].try_into().expect("wrong sized array"));
+    let nbinfobytes = MOREBYTES[(occupancy.count_ones()-2) as usize];
+    let mut infobytes: Vec<u8> = bytes[8..8+nbinfobytes as usize].to_vec();
+    assert!(infobytes.len() == nbinfobytes);
+    let bmscore: [u8; 4] = bytes[8+nbinfobytes as usize..].try_into().expect("wrong sized array");
+    infobytes.resize(16, 0);
+    let mut infos: u128 = u128::from_le_bytes(infobytes.try_into().expect("wrong sized array"));
+    let bm: u16 = u16::from_le_bytes(bmscore[..2].try_into().expect("wrong sized array"));
+    let score: i16 = i16::from_le_bytes(bmscore[2..].try_into().expect("wrong sized array"));
 
     let depth: u32 = (infos%32) as u32;
     infos /= 32;
@@ -271,24 +275,22 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
     let mut bbs: [u64; 8] = [0; 8];
     let mut mask: u64 = occupancy;
     let mut idx: usize = 0;
+    let mut kingpos: u8 = 64;
     let nb_pieces = occupancy.count_ones() as u8;
     kingpos1 = nb_pieces - kingpos1 - 1;
     kingpos2 = nb_pieces - kingpos2 - 1;
     assert!(nb_pieces <= 32);
-
-    let mut kingpos: u8 = 64;
-
     while mask > 0 {
         let sq = 63^mask.leading_zeros();
         let sqmask: u64 = 1 << sq as u64;
         let mut piece: u8;
         if idx == kingpos1 as usize {
-            if !stm {
+            if stm {
                 kingpos = sq as u8;
             }
             piece = 5*2;
         }else if idx == kingpos2 as usize {
-            if stm {
+            if !stm {
                 kingpos = sq as u8;
             }
             piece = 5*2+1;
@@ -311,6 +313,7 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
         idx += 1;
         mask ^= 1 << sq;
     }
+    assert!(depth >= 5);
     assert!(kingpos != 64);
     if !filter.should_filter(bm, score, depth, bound, &bbs, kingpos, stm) {
         let mut board: ChessBoard = ChessBoard::from_raw(
