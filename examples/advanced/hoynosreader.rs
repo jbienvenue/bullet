@@ -7,7 +7,7 @@ use std::sync::mpsc::{self, SyncSender};
 use std::io::Read;
 
 use bullet_lib::game::formats::bulletformat::ChessBoard;
-
+use std::io::Cursor;
 
 use montyformat::chess::Attacks;
 
@@ -243,15 +243,22 @@ impl DataReader<ChessBoard> for HoynosReader {
 }
 
 fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
-    let occupancy: u64 = u64::from_le_bytes(bytes[..8].try_into().expect("wrong sized array"));
-    let nbinfobytes = MOREBYTES[(occupancy.count_ones()-2) as usize];
-    let mut infobytes: Vec<u8> = bytes[8..8+nbinfobytes as usize].to_vec();
-    assert!(infobytes.len() == nbinfobytes);
-    let bmscore: [u8; 4] = bytes[8+nbinfobytes as usize..].try_into().expect("wrong sized array");
-    infobytes.resize(16, 0);
-    let mut infos: u128 = u128::from_le_bytes(infobytes.try_into().expect("wrong sized array"));
-    let bm: u16 = u16::from_le_bytes(bmscore[..2].try_into().expect("wrong sized array"));
-    let score: i16 = i16::from_le_bytes(bmscore[2..].try_into().expect("wrong sized array"));
+    let mut buff = Cursor::new(bytes);
+    let mut occ_bytes: [u8; 8] = [0; 8];
+    buff.read_exact(&mut occ_bytes).unwrap();
+    let occupancy: u64 = u64::from_le_bytes(occ_bytes);
+
+    let info_len = MOREBYTES[(occupancy.count_ones()-2) as usize];
+    let mut info_bytes: [u8; 16] = [0; 16];
+    buff.read_exact(&mut info_bytes[..info_len]).unwrap();
+    let mut infos: u128 = u128::from_le_bytes(info_bytes);
+
+    let mut buff_bmscore: [u8; 2] = [0; 2];
+    buff.read_exact(&mut buff_bmscore).unwrap();
+    let bm: u16 = u16::from_le_bytes(buff_bmscore);
+
+    buff.read_exact(&mut buff_bmscore).unwrap();
+    let score: i16 = i16::from_le_bytes(buff_bmscore);
 
     let mut probe = |div: u128| {
         let res = infos%div;
