@@ -253,49 +253,42 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
     let bm: u16 = u16::from_le_bytes(bmscore[..2].try_into().expect("wrong sized array"));
     let score: i16 = i16::from_le_bytes(bmscore[2..].try_into().expect("wrong sized array"));
 
-    let depth: u32 = (infos%32) as u32;
-    infos /= 32;
-
-    let bound: u8 = (infos%3) as u8;
-    infos /= 3;
-
-    let _count50: i32 = (infos%100) as i32;
-    infos /= 100;
-
-    let stm: bool = (infos%2) != 0;
-    infos /= 2;
-
-    let mut kingpos2: u8 = (infos % 31) as u8;
-    infos /= 31;
-
-    let mut kingpos1: u8 = (infos % 32) as u8;
+    let mut probe = |div: u128| {
+        let res = infos%div;
+        infos /= div;
+        res
+    };
+    let depth: u32 = probe(32) as u32;
+    let bound: u8 = probe(3) as u8;
+    let _count50: i32 = probe(100) as i32;
+    let stm: bool = probe(2) != 0;
+    let mut kingpos2: u8 = probe(31) as u8;
+    let kingpos1: u8 = probe(32) as u8;
     kingpos2 += (kingpos2 >= kingpos1) as u8;
-    infos /= 32;
 
     let mut bbs: [u64; 8] = [0; 8];
     let mut mask: u64 = occupancy;
-    let mut idx: usize = 0;
     let mut kingpos: u8 = 64;
     let nb_pieces = occupancy.count_ones() as u8;
-    kingpos1 = nb_pieces - kingpos1 - 1;
-    kingpos2 = nb_pieces - kingpos2 - 1;
+    assert!(kingpos1 < nb_pieces);
+    assert!(kingpos2 < nb_pieces);
     assert!(nb_pieces <= 32);
-    while mask > 0 {
+    for idx in (0..nb_pieces).rev() {
         let sq = 63^mask.leading_zeros();
         let sqmask: u64 = 1 << sq as u64;
         let mut piece: u8;
-        if idx == kingpos1 as usize {
+        if idx == kingpos1 {
             if stm {
                 kingpos = sq as u8;
             }
             piece = 5*2;
-        }else if idx == kingpos2 as usize {
+        }else if idx == kingpos2 {
             if !stm {
                 kingpos = sq as u8;
             }
             piece = 5*2+1;
         }else {
-            piece = (infos % 11) as u8;
+            piece = probe(11) as u8;
             if piece == 10 {
                 if sq / 8 == 0 || sq / 8 == 7 {
                     piece = 3; // rook
@@ -305,13 +298,11 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
                 }
                 piece = piece * 2 + (sq / 8 >= 4) as u8;
             }
-            infos /= 11;
         }
         bbs[(piece%2) as usize] |= sqmask;
         bbs[(piece >> 1) as usize + 2] |= sqmask;
 
-        idx += 1;
-        mask ^= 1 << sq;
+        mask ^= sqmask;
     }
     assert!(depth >= 5);
     assert!(kingpos != 64);
