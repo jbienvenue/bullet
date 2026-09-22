@@ -172,7 +172,7 @@ fn main() {
             batch_size: 16_384 * 8,
             batches_per_superbatch: 6104 / 8,
             start_superbatch: 1,
-            end_superbatch: 100,
+            end_superbatch: 10,
         }
     );
 
