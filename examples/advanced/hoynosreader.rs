@@ -280,8 +280,8 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
     assert!(kingpos1 < nb_pieces);
     assert!(kingpos2 < nb_pieces);
     assert!(nb_pieces <= 32);
-    for idx in 0..nb_pieces {
-        let sq = mask.trailing_zeros();
+    for idx in (0..nb_pieces).rev() {
+        let sq = 63^mask.leading_zeros();
         let sqmask: u64 = 1 << sq as u64;
         let mut piece: u8;
         if idx == kingpos1 {
@@ -304,7 +304,7 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
         bbs[(piece%2) as usize] |= sqmask;
         bbs[(piece >> 1) as usize + 2] |= sqmask;
 
-        mask &= mask-1;
+        mask ^= sqmask;
     }
     assert!(depth >= 5);
     assert!(kingpos != 64);
