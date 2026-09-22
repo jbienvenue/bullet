@@ -20,7 +20,7 @@ use bullet_trainer::{
         adam::{AdamW, AdamWParams},
     },
     reader::ReadMapLoader,
-    run::{DefaultDevice, TrainingSchedule, TrainingSteps, train},
+    run::{DefaultDevice, TrainingSchedule, TrainingSteps, train, measure_max_cpu_throughput},
 };
 
 mod hoynosreader;
@@ -182,8 +182,22 @@ fn main() {
         8192, 16,
         &filter
     );
-
     let params = (&inputs, &pp, psqt, output_buckets);
+
+    let _ = measure_max_cpu_throughput(
+        ReadMapLoader::new(
+            reader.clone(),
+            inputs::make_inputs_mapper(params, wdl::LinearWDL { start: 0.3, end: 0.7 }),
+            MAP_THREADS
+        ),
+        TrainingSteps {
+            batch_size: 16_384 * 8,
+            batches_per_superbatch: 6104 / 8,
+            start_superbatch: 1,
+            end_superbatch: 100,
+        }
+    );
+
 
     let mut run = |stage, end_superbatch, lr_schedule, mapper| {
         train(
