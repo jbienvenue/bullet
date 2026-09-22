@@ -27,29 +27,7 @@ mod hoynosreader;
 use bullet_lib::game::outputs::MaterialCount;
 mod inputs;
 
-const DATA_PATH: [&str; 80] = [
-    "data/data0.outpositions",   "data/data28.outpositions",  "data/data46.outpositions",  "data/data64.outpositions",
-    "data/data10.outpositions",  "data/data29.outpositions",  "data/data47.outpositions",  "data/data65.outpositions",
-    "data/data11.outpositions",  "data/data2.outpositions",   "data/data48.outpositions",  "data/data66.outpositions",
-    "data/data12.outpositions",  "data/data30.outpositions",  "data/data49.outpositions",  "data/data67.outpositions",
-    "data/data13.outpositions",  "data/data31.outpositions",  "data/data4.outpositions",   "data/data68.outpositions",
-    "data/data14.outpositions",  "data/data32.outpositions",  "data/data50.outpositions",  "data/data69.outpositions",
-    "data/data15.outpositions",  "data/data33.outpositions",  "data/data51.outpositions",  "data/data6.outpositions",
-    "data/data16.outpositions",  "data/data34.outpositions",  "data/data52.outpositions",  "data/data70.outpositions",
-    "data/data17.outpositions",  "data/data35.outpositions",  "data/data53.outpositions",  "data/data71.outpositions",
-    "data/data18.outpositions",  "data/data36.outpositions",  "data/data54.outpositions",  "data/data72.outpositions",
-    "data/data19.outpositions",  "data/data37.outpositions",  "data/data55.outpositions",  "data/data73.outpositions",
-    "data/data1.outpositions",   "data/data38.outpositions",  "data/data56.outpositions",  "data/data74.outpositions",
-    "data/data20.outpositions",  "data/data39.outpositions",  "data/data57.outpositions",  "data/data75.outpositions",
-    "data/data21.outpositions",  "data/data3.outpositions",   "data/data58.outpositions",  "data/data76.outpositions",
-    "data/data22.outpositions",  "data/data40.outpositions",  "data/data59.outpositions",  "data/data77.outpositions",
-    "data/data23.outpositions",  "data/data41.outpositions",  "data/data5.outpositions",   "data/data78.outpositions",
-    "data/data24.outpositions",  "data/data42.outpositions",  "data/data60.outpositions",  "data/data79.outpositions",
-    "data/data25.outpositions",  "data/data43.outpositions",  "data/data61.outpositions",  "data/data7.outpositions",
-    "data/data26.outpositions",  "data/data44.outpositions",  "data/data62.outpositions",  "data/data8.outpositions",
-    "data/data27.outpositions",  "data/data45.outpositions",  "data/data63.outpositions",  "data/data9.outpositions",
-
-];
+const DATA_PATH: [&str; 1] = ["data/fulldata.hoynos"];
 const NET_NAME: &str = "pp3";
 
 const MAP_THREADS: u8 = 8;
