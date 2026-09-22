@@ -137,7 +137,7 @@ pub fn read_game_bytes(reader: &mut impl Read, buf: &mut Vec<u8>) -> std::io::Re
     let occupancy: u64 = u64::from_le_bytes(buf[..].try_into().expect("wrong sized array"));
     let following = MOREBYTES[(occupancy.count_ones()-2) as usize] + 4;
     buf.resize(8 + following, 0);
-    reader.read_exact(&mut buf[8..]);
+    let _ = reader.read_exact(&mut buf[8..]).unwrap();
     /*let count = u16::from_le_bytes([buf[COUNT_BYTES], buf[COUNT_BYTES + 1]]) as usize;
 
     buf.resize(POSITION_RECORD_SIZE + 4 * count, 0);
@@ -269,7 +269,7 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
     infos /= 31;
 
     let mut kingpos1: u8 = (infos % 32) as u8;
-    kingpos2 += (kingpos1 <= kingpos2) as u8;
+    kingpos2 += (kingpos2 >= kingpos1) as u8;
     infos /= 32;
 
     let mut bbs: [u64; 8] = [0; 8];
