@@ -63,7 +63,7 @@ pub fn make_inputs_mapper(
             let lambda = wdl.blend(step.batch(), step.superbatch(), step.final_superbatch());
             assert!((0.0..=1.0).contains(&lambda), "WDL lambda must be in [0, 1]");
             target[0] = score;
-            target[pos.result as usize] = 1.0;
+            target[pos.result as usize + 1] = 1.0;
         },
     )
 }
