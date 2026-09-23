@@ -162,7 +162,7 @@ fn main() {
     );
     let params = (&inputs, &pp, psqt, output_buckets);
 
-    let _ = measure_max_cpu_throughput(
+    /*let _ = measure_max_cpu_throughput(
         ReadMapLoader::new(
             reader.clone(),
             inputs::make_inputs_mapper(params, wdl::LinearWDL { start: 0.3, end: 0.7 }),
@@ -174,7 +174,7 @@ fn main() {
             start_superbatch: 1,
             end_superbatch: 10,
         }
-    );
+    );*/
 
 
     let mut run = |stage, end_superbatch, lr_schedule, mapper| {
