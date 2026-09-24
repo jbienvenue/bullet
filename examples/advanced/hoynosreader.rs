@@ -316,6 +316,7 @@ fn parse_positions(bytes: &[u8], out: &mut Vec<ChessBoard>, filter: &Filter) {
             bound as f32 / 2.0,
         ).unwrap();
         board.result = bound;
+        board.score = score;
         out.push(board);
     }
 }
