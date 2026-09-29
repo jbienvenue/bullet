@@ -1,6 +1,5 @@
 //use acyclib::{graph::builder::Affine, trainer::logger};
 //use bullet_cuda_backend::CudaMarker;
-#[macro_use] extern crate cfor;
 use bullet_lib::{
     game::inputs::{ChessBucketsMirrored, SparseInputType, get_num_buckets},
     trainer::{
@@ -23,7 +22,10 @@ use bullet_trainer::{
     run::{DefaultDevice, TrainingSchedule, TrainingSteps, train, measure_max_cpu_throughput},
 };
 
-mod hoynosreader;
+mod sydparser;
+mod sydposition;
+mod sydfilter;
+mod sydwrapper;
 use bullet_lib::game::outputs::MaterialCount;
 mod inputs;
 
@@ -154,8 +156,8 @@ fn main() {
         SavedFormat::id("l3/b"),
     ];
 
-    let filter: hoynosreader::Filter = hoynosreader::Filter::default();
-    let reader = hoynosreader::HoynosReader::new(
+    let filter: sydfilter::SydFilter = sydfilter::SydFilter::default();
+    let reader = sydwrapper::SydReader::new(
         DATA_PATH.to_vec().into_iter().map(|v| v.to_string()).collect(),
         8192, 16,
         &filter
