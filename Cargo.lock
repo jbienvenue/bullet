@@ -738,9 +738,9 @@ dependencies = [
 
 [[package]]
 name = "syd-format"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c2edfbf1fe5b7d7f0d0f356772c4977a953fbe453f965fd2e725d378f2b6134"
+checksum = "1adb6910d6090746872aec7bc989589a30ae2e20a1c98d91e784b1410f8311ce"
 dependencies = [
  "bulletformat",
  "cfor",
