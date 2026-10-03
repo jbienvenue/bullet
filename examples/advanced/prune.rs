@@ -19,12 +19,11 @@ use bullet_trainer::{
         adam::{AdamW, AdamWParams},
     },
     reader::ReadMapLoader,
-    run::{DefaultDevice, TrainingSchedule, TrainingSteps, train, measure_max_cpu_throughput},
+    run::{DefaultDevice, HostPool, TrainingSchedule, TrainingSteps, train, measure_max_cpu_throughput},
 };
 
-mod sydparser;
-mod sydposition;
-mod sydfilter;
+use syd_format::filter::Filter;
+
 mod sydwrapper;
 use bullet_lib::game::outputs::MaterialCount;
 mod inputs;
@@ -156,7 +155,7 @@ fn main() {
         SavedFormat::id("l3/b"),
     ];
 
-    let filter: sydfilter::SydFilter = sydfilter::SydFilter::default();
+    let filter: Filter = Filter::default();
     let reader = sydwrapper::SydReader::new(
         DATA_PATH.to_vec().into_iter().map(|v| v.to_string()).collect(),
         8192, 16,
@@ -240,6 +239,7 @@ fn main() {
     evaluator.load_device_weights(optimiser.weights()).unwrap();
     let evaluator_mapper = inputs::make_inputs_mapper(params, wdl::ConstantWDL { value: 0.0 });
 
+    let pool = HostPool::new(device.clone());
     for fen in [
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
@@ -318,7 +318,7 @@ fn main() {
         "7K/r2R3b/1Q6/8/2q5/1nPB2k1/N3p3/8 w - - 0 1",
     ] {
         let pos = format!("{fen} | 0 | 0.0").parse().unwrap();
-        let inputs = evaluator_mapper.map(&[pos], Default::default(), 1).to_device(&device).unwrap();
+        let inputs = evaluator_mapper.map(&pool, &[pos], Default::default(), 1).unwrap().to_device(&device).unwrap();
         let output = evaluator.evaluate(&inputs).unwrap().get("output").unwrap();
         let [value] = output.to_host().unwrap().f32()[..] else { panic!() };
         println!("FEN: {fen}");

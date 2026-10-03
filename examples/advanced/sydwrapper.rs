@@ -1,24 +1,24 @@
 use bullet_trainer::reader::DataReader;
 use rand::seq::SliceRandom;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Cursor};
 use std::sync::mpsc::{self, SyncSender};
 use std::io::Read;
 
 use bullet_lib::game::formats::bulletformat::ChessBoard;
-use crate::sydfilter::SydFilter;
-use crate::sydparser::parse_syd;
+use syd_format::reader::SydGame;
+use syd_format::filter::Filter;
 
 #[derive(Clone)]
 pub struct SydReader {
     file_paths: Vec<String>,
     buffer_size: usize,
     threads: usize,
-    filter: SydFilter,
+    filter: Filter,
 }
 
 impl SydReader {
-    pub fn new(file_paths: Vec<String>, buffer_size_mb: usize, threads: usize, filter: &SydFilter) -> Self {
+    pub fn new(file_paths: Vec<String>, buffer_size_mb: usize, threads: usize, filter: &Filter) -> Self {
         Self {
             file_paths,
             buffer_size: buffer_size_mb * 1024 * 1024 / size_of::<ChessBoard>() / 2,
@@ -83,7 +83,7 @@ impl DataReader<ChessBoard> for SydReader {
 
         let (game_sender, game_receiver) = mpsc::sync_channel::<Vec<ChessBoard>>(4 * self.threads);
         let (game_msg_sender, game_msg_receiver) = mpsc::sync_channel::<bool>(1);
-        let local_filter: SydFilter = self.filter.clone();
+        let local_filter: Filter = self.filter.clone();
         std::thread::spawn(move || {
             'dataloading: while let Ok(games) = receiver.recv() {
                 if game_msg_receiver.try_recv().unwrap_or(false) {
@@ -138,7 +138,7 @@ impl DataReader<ChessBoard> for SydReader {
     }
 }
 
-fn convert_buffer(threads: usize, sender: &SyncSender<Vec<ChessBoard>>, games: &[Vec<u8>], filter: &SydFilter) {
+fn convert_buffer(threads: usize, sender: &SyncSender<Vec<ChessBoard>>, games: &[Vec<u8>], filter: &Filter) {
     let chunk_size = games.len().div_ceil(threads);
 
     std::thread::scope(|s| {
@@ -146,9 +146,10 @@ fn convert_buffer(threads: usize, sender: &SyncSender<Vec<ChessBoard>>, games: &
             let this_sender = sender.clone();
             s.spawn(move || {
                 let mut buffer = Vec::new();
-
+                let mut parser = SydGame::new();
                 for game_bytes in chunk {
-                    parse_syd(game_bytes, &mut buffer, &filter);
+                    let mut c = Cursor::new(game_bytes);
+                    parser.parse_syd(&mut c, &mut buffer, &filter);
                 }
 
                 this_sender.send(buffer)

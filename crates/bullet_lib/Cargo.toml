@@ -20,6 +20,7 @@ rand = "0.9.0"
 sfbinpack = "0.6.4"
 viriformat = "2.0.1"
 cfor = "1.0"
+syd-format = "0.1.3"
 
 [features]
 cuda = ["bullet-gpu/cuda", "bullet-trainer/cuda"]
