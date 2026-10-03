@@ -37,7 +37,7 @@ pub fn read_game_bytes(reader: &mut impl Read, buf: &mut Vec<u8>) -> std::io::Re
     reader.read_exact(&mut buf[1..4])?;
     let nbbytes: u32 = u32::from_le_bytes(buf[..].try_into().expect("wrong sized array"));
     buf.resize(4 + nbbytes as usize, 0);
-    let _ = reader.read_exact(&mut buf[8..]).unwrap();
+    let _ = reader.read_exact(&mut buf[4..]).unwrap();
 
     Ok(true)
 }
@@ -149,7 +149,7 @@ fn convert_buffer(threads: usize, sender: &SyncSender<Vec<ChessBoard>>, games: &
                 let mut parser = SydGame::new();
                 for game_bytes in chunk {
                     let mut c = Cursor::new(game_bytes);
-                    parser.parse_syd(&mut c, &mut buffer, &filter);
+                    parser.parse_syd(&mut c, &mut buffer, &filter).unwrap();
                 }
 
                 this_sender.send(buffer)
