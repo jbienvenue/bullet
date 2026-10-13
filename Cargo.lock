@@ -739,7 +739,7 @@ dependencies = [
 [[package]]
 name = "syd-format"
 version = "0.2.1"
-source = "git+https://gitlab.com/jbn1729/syd-format?branch=main#4f93e6305f482014b7bf19c37148529d3f84fc52"
+source = "git+https://gitlab.com/jbn1729/syd-format?branch=main#98d9dd0d42b0882b2ce33065d9a89afde5eda930"
 dependencies = [
  "bulletformat",
  "cfor",
