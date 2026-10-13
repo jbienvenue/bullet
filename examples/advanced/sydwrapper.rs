@@ -69,7 +69,7 @@ impl DataReader<ChessBoard> for SydReader {
 
                         games.push(buf);
 
-                        if games.len().is_multiple_of(8192 * threads) {
+                        if games.len().is_multiple_of(128 * threads) {
                             if msg_receiver.try_recv().unwrap_or(false) || sender.send(games).is_err() {
                                 break 'dataloading;
                             }
