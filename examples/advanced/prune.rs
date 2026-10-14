@@ -28,17 +28,8 @@ mod sydwrapper;
 use bullet_lib::game::outputs::MaterialCount;
 mod inputs;
 
-const DATA_PATH: [&str; 10] = [
-    "data/fulldata1.syd",
-    "data/fulldata2.syd",
-    "data/fulldata3.syd",
-    "data/fulldata4.syd",
-    "data/fulldata5.syd",
-    "data/fulldata6.syd",
-    "data/fulldata7.syd",
-    "data/fulldata8.syd",
-    "data/fulldata9.syd",
-    "data/fulldata10.syd",
+const DATA_PATH: [&str; 1] = [
+    "data/data.syd",
 ];
 const NET_NAME: &str = "syd";
 
